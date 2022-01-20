@@ -1,9 +1,21 @@
 const blogsHelper = require('../utils/blogs_helper');
+const mongoose = require('mongoose');
+const supertest = require('supertest');
+const app = require('../../app');
+const api = supertest(app);
+const Blog = require('../models/Blog');
 
-test('dummy returns 0', () => {
-    const result = blogsHelper.dummy([]);
+beforeEach(async () => {
+  await Blog.deleteMany({});
+  await Blog.insertMany(blogsHelper.initialBlogs);
+});
 
-    expect(result).toBe(1);
+describe('there are blogs saved', () => {
+  test('all blogs are returned', async () => {
+    const blogs = await api.get('/api/blogs');
+
+    expect(blogs.body).toHaveLength(blogsHelper.initialBlogs.length);
+  });
 });
 
 describe('testing total likes', () => {
@@ -81,4 +93,8 @@ describe('top blogs', () => {
     test('most likes', () => {
         expect(blogsHelper.topBlog(blogs)).toEqual(blogs[2]);
     });
+});
+
+afterAll(() => {
+  mongoose.connection.close();
 });
